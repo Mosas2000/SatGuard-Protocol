@@ -8,6 +8,7 @@
         "deploy:mainnet": "node deploy-mainnet.js",
         "activity": "node generate-activity.js",
         "advanced-activity": "node advanced-activity.js",
+        "mainnet-activity": "node mainnet-activity.js",
         "check": "node check-status.js"
     },
     "dependencies": {
