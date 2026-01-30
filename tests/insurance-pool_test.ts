@@ -326,3 +326,299 @@ Clarinet.test({
         assertEquals(contributionData['amount'], types.uint(350000)); // 200000 + 150000
     }
 });
+
+// Claim submission tests
+Clarinet.test({
+    name: "Successfully submit claim as contributor",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Setup: Create pool and contribute
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(500000)], alice.address)
+        ]);
+
+        // Submit claim
+        let claimBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'submit-claim',
+                [
+                    types.uint(1),
+                    types.uint(300000),
+                    types.utf8('Exchange hack - lost funds in FTX collapse')
+                ],
+                alice.address
+            )
+        ]);
+
+        claimBlock.receipts[0].result.expectOk().expectUint(1);
+    }
+});
+
+Clarinet.test({
+    name: "Reject claim from non-contributor",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const bob = accounts.get('wallet_2')!;
+
+        // Setup: Create pool (bob doesn't contribute)
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address)
+        ]);
+
+        // Try to submit claim without contributing
+        let claimBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'submit-claim',
+                [types.uint(1), types.uint(300000), types.utf8('Fake claim')],
+                bob.address)
+        ]);
+
+        claimBlock.receipts[0].result.expectErr().expectUint(102); // err-unauthorized
+    }
+});
+
+Clarinet.test({
+    name: "Reject claim exceeding max coverage",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Setup
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(500000)], alice.address)
+        ]);
+
+        // Try to claim more than max coverage
+        let claimBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'submit-claim',
+                [types.uint(1), types.uint(2000000), types.utf8('Excessive claim')],
+                alice.address)
+        ]);
+
+        claimBlock.receipts[0].result.expectErr().expectUint(103); // err-invalid-amount
+    }
+});
+
+// Voting mechanism tests
+Clarinet.test({
+    name: "Successfully vote on claim",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+        const bob = accounts.get('wallet_2')!;
+
+        // Setup: Create pool, contribute, submit claim
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(500000)], alice.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(300000)], bob.address),
+            Tx.contractCall('insurance-pool', 'submit-claim',
+                [types.uint(1), types.uint(300000), types.utf8('Valid claim')],
+                alice.address)
+        ]);
+
+        // Vote on claim
+        let voteBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'vote-on-claim',
+                [types.uint(1), types.bool(true)], bob.address)
+        ]);
+
+        voteBlock.receipts[0].result.expectOk().expectBool(true);
+    }
+});
+
+Clarinet.test({
+    name: "Prevent double voting",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+        const bob = accounts.get('wallet_2')!;
+
+        // Setup
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(500000)], alice.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(300000)], bob.address),
+            Tx.contractCall('insurance-pool', 'submit-claim',
+                [types.uint(1), types.uint(300000), types.utf8('Valid claim')],
+                alice.address)
+        ]);
+
+        // First vote
+        let firstVote = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'vote-on-claim',
+                [types.uint(1), types.bool(true)], bob.address)
+        ]);
+
+        // Try to vote again
+        let secondVote = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'vote-on-claim',
+                [types.uint(1), types.bool(false)], bob.address)
+        ]);
+
+        secondVote.receipts[0].result.expectErr().expectUint(102); // err-unauthorized
+    }
+});
+
+// Payout processing tests
+Clarinet.test({
+    name: "Process approved claim payout with sufficient votes",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+        const bob = accounts.get('wallet_2')!;
+
+        // Setup: pool with contributors, alice submits claim
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(400000)], alice.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(600000)], bob.address),
+            Tx.contractCall('insurance-pool', 'submit-claim',
+                [types.uint(1), types.uint(300000), types.utf8('Legitimate loss')],
+                alice.address)
+        ]);
+
+        // Vote to approve (bob approves with 60% voting power)
+        let voteBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'vote-on-claim',
+                [types.uint(1), types.bool(true)], bob.address)
+        ]);
+
+        // Process payout
+        let payoutBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'process-claim-payout',
+                [types.uint(1)], deployer.address)
+        ]);
+
+        payoutBlock.receipts[0].result.expectOk().expectBool(true);
+    }
+});
+
+// Security and edge case tests
+Clarinet.test({
+    name: "Prevent unauthorized pool closure",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const bob = accounts.get('wallet_2')!;
+
+        // Create pool as deployer
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address)
+        ]);
+
+        // Try to close as different user
+        let closeBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'close-pool',
+                [types.uint(1)], bob.address)
+        ]);
+
+        closeBlock.receipts[0].result.expectErr().expectUint(100); // err-owner-only
+    }
+});
+
+Clarinet.test({
+    name: "Prevent contribution to closed pool",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Create and close pool
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'close-pool',
+                [types.uint(1)], deployer.address)
+        ]);
+
+        // Try to contribute to closed pool
+        let contributeBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(200000)], alice.address)
+        ]);
+
+        contributeBlock.receipts[0].result.expectErr().expectUint(104); // err-pool-closed
+    }
+});
+
+Clarinet.test({
+    name: "Withdrawal only allowed from closed pools",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Setup: create pool and contribute
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(500000)], alice.address)
+        ]);
+
+        // Try to withdraw from active pool
+        let withdrawBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'withdraw-from-pool',
+                [types.uint(1)], alice.address)
+        ]);
+
+        withdrawBlock.receipts[0].result.expectErr().expectUint(102); // err-unauthorized
+    }
+});
+
+Clarinet.test({
+    name: "Successfully close pool and withdraw funds",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Setup: create pool and contribute
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)], deployer.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(500000)], alice.address)
+        ]);
+
+        // Close pool
+        let closeBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'close-pool',
+                [types.uint(1)], deployer.address)
+        ]);
+
+        // Withdraw funds
+        let withdrawBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'withdraw-from-pool',
+                [types.uint(1)], alice.address)
+        ]);
+
+        withdrawBlock.receipts[0].result.expectOk();
+    }
+});
