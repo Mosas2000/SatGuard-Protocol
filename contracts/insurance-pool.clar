@@ -229,4 +229,76 @@
   )
 )
 
+;; Vote tracking
+(define-map votes
+  { claim-id: uint, voter: principal }
+  {
+    vote: bool,
+    voting-power: uint,
+    voted-at: uint
+  }
+)
+
+;; Read-only function to get vote
+(define-read-only (get-vote (claim-id uint) (voter principal))
+  (map-get? votes { claim-id: claim-id, voter: voter })
+)
+
+;; Vote on claim
+(define-public (vote-on-claim (claim-id uint) (approve bool))
+  (let
+    (
+      (claim (unwrap! (get-claim claim-id) err-not-found))
+      (pool-id (get pool-id claim))
+      (pool (unwrap! (get-pool pool-id) err-not-found))
+      (contribution (unwrap! (get-contribution pool-id tx-sender) err-unauthorized))
+      (voting-power (get amount contribution))
+      (existing-vote (map-get? votes { claim-id: claim-id, voter: tx-sender }))
+    )
+    ;; Validate claim is pending
+    (asserts! (is-eq (get status claim) CLAIM-STATUS-PENDING) err-unauthorized)
+    
+    ;; Validate voter is a contributor
+    (asserts! (> voting-power u0) err-unauthorized)
+    
+    ;; Prevent double voting
+    (asserts! (is-none existing-vote) err-unauthorized)
+    
+    ;; Record vote
+    (map-set votes
+      { claim-id: claim-id, voter: tx-sender }
+      {
+        vote: approve,
+        voting-power: voting-power,
+        voted-at: block-height
+      }
+    )
+    
+    ;; Update claim vote counts
+    (map-set claims
+      { claim-id: claim-id }
+      (merge claim {
+        votes-for: (if approve 
+          (+ (get votes-for claim) voting-power)
+          (get votes-for claim)),
+        votes-against: (if approve
+          (get votes-against claim)
+          (+ (get votes-against claim) voting-power))
+      })
+    )
+    
+    ;; Print vote event
+    (print {
+      event: "vote-cast",
+      claim-id: claim-id,
+      voter: tx-sender,
+      approve: approve,
+      voting-power: voting-power
+    })
+    
+    (ok true)
+  )
+)
+
+
 
