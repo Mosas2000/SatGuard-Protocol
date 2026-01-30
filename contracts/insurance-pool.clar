@@ -301,4 +301,139 @@
 )
 
 
+;; Process claim payout
+(define-public (process-claim-payout (claim-id uint))
+  (let
+    (
+      (claim (unwrap! (get-claim claim-id) err-not-found))
+      (pool-id (get pool-id claim))
+      (pool (unwrap! (get-pool pool-id) err-not-found))
+      (total-votes (+ (get votes-for claim) (get votes-against claim)))
+      (approval-threshold (/ (* (get total-funds pool) u60) u100))
+    )
+    ;; Validate claim is pending
+    (asserts! (is-eq (get status claim) CLAIM-STATUS-PENDING) err-unauthorized)
+    
+    ;; Validate sufficient votes cast
+    (asserts! (>= total-votes (/ (get total-funds pool) u2)) err-unauthorized)
+    
+    ;; Check if claim approved
+    (if (>= (get votes-for claim) approval-threshold)
+      (begin
+        ;; Approve and mark as paid
+        (map-set claims
+          { claim-id: claim-id }
+          (merge claim { status: CLAIM-STATUS-PAID })
+        )
+        
+        ;; Update pool funds
+        (map-set pools
+          { pool-id: pool-id }
+          (merge pool {
+            total-funds: (- (get total-funds pool) (get amount claim))
+          })
+        )
+        
+        ;; Print payout event
+        (print {
+          event: "claim-paid",
+          claim-id: claim-id,
+          claimant: (get claimant claim),
+          amount: (get amount claim)
+        })
+        
+        (ok true)
+      )
+      (begin
+        ;; Reject claim
+        (map-set claims
+          { claim-id: claim-id }
+          (merge claim { status: CLAIM-STATUS-REJECTED })
+        )
+        
+        ;; Print rejection event
+        (print {
+          event: "claim-rejected",
+          claim-id: claim-id
+        })
+        
+        (ok false)
+      )
+    )
+  )
+)
+
+;; Close pool
+(define-public (close-pool (pool-id uint))
+  (let
+    (
+      (pool (unwrap! (get-pool pool-id) err-not-found))
+    )
+    ;; Only pool creator can close
+    (asserts! (is-eq tx-sender (get creator pool)) err-owner-only)
+    
+    ;; Validate pool is active
+    (asserts! (is-eq (get status pool) POOL-STATUS-ACTIVE) err-pool-closed)
+    
+    ;; Update pool status
+    (map-set pools
+      { pool-id: pool-id }
+      (merge pool { status: POOL-STATUS-CLOSED })
+    )
+    
+    ;; Print close event
+    (print {
+      event: "pool-closed",
+      pool-id: pool-id,
+      closer: tx-sender
+    })
+    
+    (ok true)
+  )
+)
+
+;; Withdraw from pool
+(define-public (withdraw-from-pool (pool-id uint))
+  (let
+    (
+      (pool (unwrap! (get-pool pool-id) err-not-found))
+      (contribution (unwrap! (get-contribution pool-id tx-sender) err-not-found))
+      (withdrawal-amount (get amount contribution))
+    )
+    ;; Pool must be closed for withdrawals
+    (asserts! (is-eq (get status pool) POOL-STATUS-CLOSED) err-unauthorized)
+    
+    ;; Validate user has contribution
+    (asserts! (> withdrawal-amount u0) err-invalid-amount)
+    
+    ;; Calculate proportional share of remaining funds
+    (let
+      (
+        (share (/ (* withdrawal-amount (get total-funds pool)) 
+                 (get total-funds pool)))
+      )
+      ;; Remove contribution record
+      (map-delete contributors { pool-id: pool-id, contributor: tx-sender })
+      
+      ;; Update pool
+      (map-set pools
+        { pool-id: pool-id }
+        (merge pool {
+          total-funds: (- (get total-funds pool) share),
+          contributor-count: (- (get contributor-count pool) u1)
+        })
+      )
+      
+      ;; Print withdrawal event
+      (print {
+        event: "withdrawal-made",
+        pool-id: pool-id,
+        contributor: tx-sender,
+        amount: share
+      })
+      
+      (ok share)
+    )
+  )
+)
 
