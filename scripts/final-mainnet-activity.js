@@ -42,20 +42,20 @@ async function generateFinalActivity() {
             contractAddress: CONTRACT_ADDRESS,
             contractName: CONTRACT_NAME,
             functionName: 'get-pool',
-            functionArgs: [uintCV(0)],
+            functionArgs: [uintCV(1)],
             network: NETWORK,
             senderAddress: address,
         });
 
         const pool = cvToJSON(poolResult);
         if (!pool.value) {
-            console.error('\n❌ Pool 0 does not exist yet!');
+            console.error('\n❌ Pool 1 does not exist yet!');
             console.log('   Please wait for pool creation to confirm first.');
             console.log('   Check: https://explorer.stacks.co/txid/c4b007a2ed3bde172f05663f2886309dbf12120c7070efebc77563e8a661ea18?chain=mainnet\n');
             process.exit(1);
         }
 
-        console.log('✅ Pool 0 confirmed!\n');
+        console.log('✅ Pool 1 confirmed!\n');
 
         let successCount = 0;
 
@@ -66,7 +66,7 @@ async function generateFinalActivity() {
                 contractAddress: CONTRACT_ADDRESS,
                 contractName: CONTRACT_NAME,
                 functionName: 'contribute',
-                functionArgs: [uintCV(0), uintCV(600000)],
+                functionArgs: [uintCV(1), uintCV(600000)],
                 senderKey: privateKey,
                 network: NETWORK,
                 anchorMode: AnchorMode.Any,
@@ -94,7 +94,7 @@ async function generateFinalActivity() {
                 contractName: CONTRACT_NAME,
                 functionName: 'submit-claim',
                 functionArgs: [
-                    uintCV(0),
+                    uintCV(1),
                     uintCV(500000),
                     stringUtf8CV('Test claim for mainnet verification')
                 ],
