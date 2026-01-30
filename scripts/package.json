@@ -6,7 +6,9 @@
     "scripts": {
         "deploy:testnet": "node deploy-testnet.js",
         "deploy:mainnet": "node deploy-mainnet.js",
-        "activity": "node generate-activity.js"
+        "activity": "node generate-activity.js",
+        "advanced-activity": "node advanced-activity.js",
+        "check": "node check-status.js"
     },
     "dependencies": {
         "@stacks/network": "^6.13.0",
