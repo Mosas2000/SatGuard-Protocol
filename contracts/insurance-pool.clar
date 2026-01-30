@@ -83,3 +83,64 @@
     (ok new-pool-id)
   )
 )
+
+;; Contributor tracking
+(define-map contributors
+  { pool-id: uint, contributor: principal }
+  {
+    amount: uint,
+    contributed-at: uint
+  }
+)
+
+;; Read-only function to get contribution
+(define-read-only (get-contribution (pool-id uint) (contributor principal))
+  (map-get? contributors { pool-id: pool-id, contributor: contributor })
+)
+
+;; Contribute to pool
+(define-public (contribute-to-pool (pool-id uint) (amount uint))
+  (let
+    (
+      (pool (unwrap! (get-pool pool-id) err-not-found))
+      (existing-contribution (default-to { amount: u0, contributed-at: u0 }
+        (map-get? contributors { pool-id: pool-id, contributor: tx-sender })))
+    )
+    ;; Validate pool is active
+    (asserts! (is-eq (get status pool) POOL-STATUS-ACTIVE) err-pool-closed)
+    
+    ;; Validate contribution amount
+    (asserts! (>= amount (get min-contribution pool)) err-invalid-amount)
+    
+    ;; Update or create contribution record
+    (map-set contributors
+      { pool-id: pool-id, contributor: tx-sender }
+      {
+        amount: (+ (get amount existing-contribution) amount),
+        contributed-at: block-height
+      }
+    )
+    
+    ;; Update pool total funds
+    (map-set pools
+      { pool-id: pool-id }
+      (merge pool {
+        total-funds: (+ (get total-funds pool) amount),
+        contributor-count: (if (is-eq (get amount existing-contribution) u0)
+          (+ (get contributor-count pool) u1)
+          (get contributor-count pool))
+      })
+    )
+    
+    ;; Print contribution event
+    (print {
+      event: "contribution-made",
+      pool-id: pool-id,
+      contributor: tx-sender,
+      amount: amount
+    })
+    
+    (ok true)
+  )
+)
+
