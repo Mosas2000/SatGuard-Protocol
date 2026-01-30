@@ -41,13 +41,16 @@ async function generateActivity() {
         }
 
         // Get contract address from command line or prompt
-        const contractAddress = process.argv[2];
-        if (!contractAddress) {
+        let contractInput = process.argv[2];
+        if (!contractInput) {
             console.error('\n❌ Error: Please provide your contract address');
             console.log('\nUsage: npm run activity YOUR_CONTRACT_ADDRESS');
             console.log('Example: npm run activity ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM');
             process.exit(1);
         }
+
+        // Parse contract address (handle both "ADDRESS" and "ADDRESS.contract-name" formats)
+        const contractAddress = contractInput.includes('.') ? contractInput.split('.')[0] : contractInput;
 
         // Generate wallet
         const wallet = await generateWallet({
