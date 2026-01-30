@@ -13,7 +13,8 @@
         "check": "node check-status.js",
         "check-mainnet": "node check-mainnet-state.js",
         "test-mainnet": "node test-mainnet-tx.js",
-        "final-activity": "node final-mainnet-activity.js"
+        "final-activity": "node final-mainnet-activity.js",
+        "more-activity": "node more-mainnet-activity.js"
     },
     "dependencies": {
         "@stacks/network": "^6.13.0",
