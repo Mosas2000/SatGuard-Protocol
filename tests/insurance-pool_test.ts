@@ -148,3 +148,181 @@ Clarinet.test({
         poolCount.result.expectUint(2);
     }
 });
+
+// Contribution flow tests
+Clarinet.test({
+    name: "Successfully contribute to pool",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Create pool
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'create-pool',
+                [
+                    types.ascii(testPool.coverageType),
+                    types.uint(testPool.minContribution),
+                    types.uint(testPool.maxCoverage)
+                ],
+                deployer.address
+            )
+        ]);
+
+        // Contribute to pool
+        let contributionBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'contribute-to-pool',
+                [
+                    types.uint(1),
+                    types.uint(200000) // 0.2 sBTC
+                ],
+                alice.address
+            )
+        ]);
+
+        contributionBlock.receipts[0].result.expectOk().expectBool(true);
+    }
+});
+
+Clarinet.test({
+    name: "Reject contribution below minimum",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Create pool
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'create-pool',
+                [
+                    types.ascii(testPool.coverageType),
+                    types.uint(testPool.minContribution),
+                    types.uint(testPool.maxCoverage)
+                ],
+                deployer.address
+            )
+        ]);
+
+        // Try to contribute less than minimum
+        let contributionBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'contribute-to-pool',
+                [
+                    types.uint(1),
+                    types.uint(50000) // Less than min contribution
+                ],
+                alice.address
+            )
+        ]);
+
+        contributionBlock.receipts[0].result.expectErr().expectUint(103); // err-invalid-amount
+    }
+});
+
+Clarinet.test({
+    name: "Track multiple contributors correctly",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+        const bob = accounts.get('wallet_2')!;
+
+        // Create pool
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'create-pool',
+                [
+                    types.ascii(testPool.coverageType),
+                    types.uint(testPool.minContribution),
+                    types.uint(testPool.maxCoverage)
+                ],
+                deployer.address
+            )
+        ]);
+
+        // Multiple contributions
+        let contributionBlock = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(200000)], alice.address),
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(300000)], bob.address)
+        ]);
+
+        // Verify pool total funds
+        let pool = chain.callReadOnlyFn(
+            'insurance-pool',
+            'get-pool',
+            [types.uint(1)],
+            deployer.address
+        );
+
+        let poolData = pool.result.expectSome().expectTuple();
+        assertEquals(poolData['total-funds'], types.uint(500000));
+        assertEquals(poolData['contributor-count'], types.uint(2));
+    }
+});
+
+Clarinet.test({
+    name: "Reject contribution to non-existent pool",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const alice = accounts.get('wallet_1')!;
+
+        let contributionBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'contribute-to-pool',
+                [types.uint(999), types.uint(200000)],
+                alice.address
+            )
+        ]);
+
+        contributionBlock.receipts[0].result.expectErr().expectUint(101); // err-not-found
+    }
+});
+
+Clarinet.test({
+    name: "Update contributor amount on multiple contributions",
+    async fn(chain: Chain, accounts: Map<string, Account>) {
+        const deployer = accounts.get('deployer')!;
+        const alice = accounts.get('wallet_1')!;
+
+        // Create pool
+        let setupBlock = chain.mineBlock([
+            Tx.contractCall(
+                'insurance-pool',
+                'create-pool',
+                [types.ascii(testPool.coverageType), types.uint(testPool.minContribution),
+                types.uint(testPool.maxCoverage)],
+                deployer.address
+            )
+        ]);
+
+        // First contribution
+        let firstContribution = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(200000)], alice.address)
+        ]);
+
+        // Second contribution from same user
+        let secondContribution = chain.mineBlock([
+            Tx.contractCall('insurance-pool', 'contribute-to-pool',
+                [types.uint(1), types.uint(150000)], alice.address)
+        ]);
+
+        // Check contribution total
+        let contribution = chain.callReadOnlyFn(
+            'insurance-pool',
+            'get-contribution',
+            [types.uint(1), types.principal(alice.address)],
+            deployer.address
+        );
+
+        let contributionData = contribution.result.expectSome().expectTuple();
+        assertEquals(contributionData['amount'], types.uint(350000)); // 200000 + 150000
+    }
+});
