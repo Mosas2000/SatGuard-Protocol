@@ -10,7 +10,10 @@
         "advanced-activity": "node advanced-activity.js",
         "mainnet-activity": "node mainnet-activity.js",
         "careful-mainnet": "node careful-mainnet.js",
-        "check": "node check-status.js"
+        "check": "node check-status.js",
+        "check-mainnet": "node check-mainnet-state.js",
+        "test-mainnet": "node test-mainnet-tx.js",
+        "final-activity": "node final-mainnet-activity.js"
     },
     "dependencies": {
         "@stacks/network": "^6.13.0",
