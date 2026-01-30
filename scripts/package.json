@@ -5,10 +5,13 @@
     "description": "Deployment scripts for SatGuard Protocol",
     "scripts": {
         "deploy:testnet": "node deploy-testnet.js",
-        "deploy:mainnet": "node deploy-mainnet.js"
+        "deploy:mainnet": "node deploy-mainnet.js",
+        "activity": "node generate-activity.js"
     },
     "dependencies": {
+        "@stacks/network": "^6.13.0",
         "@stacks/transactions": "^6.13.1",
-        "@stacks/network": "^6.13.0"
+        "@stacks/wallet-sdk": "^7.2.0",
+        "toml": "^3.0.0"
     }
 }
