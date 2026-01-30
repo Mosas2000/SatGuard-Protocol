@@ -85,6 +85,12 @@ async function generateActivity() {
         const pool1Response = await broadcastTransaction(pool1Tx, NETWORK);
         if (pool1Response.error) {
             console.error('   ❌ Failed:', pool1Response.error);
+            if (pool1Response.reason) {
+                console.error('   📝 Reason:', pool1Response.reason);
+            }
+            if (pool1Response.reason_data) {
+                console.error('   📊 Details:', JSON.stringify(pool1Response.reason_data, null, 2));
+            }
         } else {
             console.log(`   ✅ Success! TX: ${pool1Response.txid}`);
             console.log(`   🔍 https://explorer.stacks.co/txid/${pool1Response.txid}?chain=testnet\n`);
