@@ -144,3 +144,89 @@
   )
 )
 
+;; Claim tracking
+(define-data-var claim-nonce uint u0)
+
+;; Claim status constants
+(define-constant CLAIM-STATUS-PENDING u1)
+(define-constant CLAIM-STATUS-APPROVED u2)
+(define-constant CLAIM-STATUS-REJECTED u3)
+(define-constant CLAIM-STATUS-PAID u4)
+
+(define-map claims
+  { claim-id: uint }
+  {
+    pool-id: uint,
+    claimant: principal,
+    amount: uint,
+    reason: (string-utf8 500),
+    submitted-at: uint,
+    status: uint,
+    votes-for: uint,
+    votes-against: uint
+  }
+)
+
+;; Read-only function to get claim
+(define-read-only (get-claim (claim-id uint))
+  (map-get? claims { claim-id: claim-id })
+)
+
+(define-read-only (get-claim-count)
+  (var-get claim-nonce)
+)
+
+;; Submit claim
+(define-public (submit-claim 
+  (pool-id uint)
+  (amount uint)
+  (reason (string-utf8 500)))
+  (let
+    (
+      (pool (unwrap! (get-pool pool-id) err-not-found))
+      (contribution (unwrap! (get-contribution pool-id tx-sender) err-unauthorized))
+      (new-claim-id (+ (var-get claim-nonce) u1))
+    )
+    ;; Validate pool is active
+    (asserts! (is-eq (get status pool) POOL-STATUS-ACTIVE) err-pool-closed)
+    
+    ;; Validate claimant is a contributor
+    (asserts! (> (get amount contribution) u0) err-unauthorized)
+    
+    ;; Validate claim amount
+    (asserts! (> amount u0) err-invalid-amount)
+    (asserts! (<= amount (get max-coverage pool)) err-invalid-amount)
+    (asserts! (<= amount (get total-funds pool)) err-insufficient-funds)
+    
+    ;; Create claim
+    (map-set claims
+      { claim-id: new-claim-id }
+      {
+        pool-id: pool-id,
+        claimant: tx-sender,
+        amount: amount,
+        reason: reason,
+        submitted-at: block-height,
+        status: CLAIM-STATUS-PENDING,
+        votes-for: u0,
+        votes-against: u0
+      }
+    )
+    
+    ;; Update claim nonce
+    (var-set claim-nonce new-claim-id)
+    
+    ;; Print claim event
+    (print {
+      event: "claim-submitted",
+      claim-id: new-claim-id,
+      pool-id: pool-id,
+      claimant: tx-sender,
+      amount: amount
+    })
+    
+    (ok new-claim-id)
+  )
+)
+
+
