@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { UserSession, AppConfig } from '@stacks/connect';
 import Header from './components/Header';
 import LandingPage from './components/LandingPage';
+import PoolsList from './components/PoolsList';
+import CreatePool from './components/CreatePool';
+import PoolDetail from './components/PoolDetail';
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 const userSession = new UserSession({ appConfig });
@@ -35,8 +38,9 @@ function App() {
         />
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/pools" element={<div className="max-w-7xl mx-auto px-4 py-12"><h1 className="text-4xl font-bold">Pools Coming Soon</h1></div>} />
-          <Route path="/create" element={<div className="max-w-7xl mx-auto px-4 py-12"><h1 className="text-4xl font-bold">Create Pool Coming Soon</h1></div>} />
+          <Route path="/pools" element={<PoolsList />} />
+          <Route path="/pools/:id" element={<PoolDetail userAddress={userAddress} />} />
+          <Route path="/create" element={<CreatePool />} />
           <Route path="/dashboard" element={<div className="max-w-7xl mx-auto px-4 py-12"><h1 className="text-4xl font-bold">Dashboard Coming Soon</h1></div>} />
         </Routes>
       </div>
