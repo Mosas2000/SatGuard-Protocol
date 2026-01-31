@@ -1,10 +1,10 @@
-import { StacksMainnet, StacksTestnet } from '@stacks/network';
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 
 const isMainnet = import.meta.env.VITE_STACKS_NETWORK === 'mainnet';
 
 export const network = isMainnet
-    ? new StacksMainnet()
-    : new StacksTestnet();
+    ? STACKS_MAINNET
+    : STACKS_TESTNET;
 
 export const explorerUrl = isMainnet
     ? 'https://explorer.hiro.so'
