@@ -1,5 +1,5 @@
 import { useUserStats } from '../hooks/useUserStats';
-import { formatAmount } from '../utils/network';
+import { formatAmount } from '../utils/constants';
 
 interface UserDashboardProps {
     userAddress: string | null;

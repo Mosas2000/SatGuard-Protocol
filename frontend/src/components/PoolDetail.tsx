@@ -8,7 +8,8 @@ import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../utils/constants';
 import { usePool } from '../hooks/usePool';
 import { useContribution } from '../hooks/useContribution';
 import { useClaims } from '../hooks/useClaims';
-import { formatAmount, getAddressUrl } from '../utils/network';
+import { formatAmount } from '../utils/constants';
+import { getAddressUrl } from '../utils/network';
 import { POOL_STATUS } from '../utils/constants';
 
 import ContributeModal from './ContributeModal';
