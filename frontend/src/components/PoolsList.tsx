@@ -7,12 +7,28 @@ export default function PoolsList() {
     const { pools, loading, error } = usePools();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState<number | 'all'>('all');
+    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'funds' | 'contributors'>('newest');
 
-    const filteredPools = pools.filter((pool) => {
-        const matchesSearch = pool.coverageType.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = filterStatus === 'all' || pool.status === filterStatus;
-        return matchesSearch && matchesStatus;
-    });
+    const filteredPools = pools
+        .filter((pool) => {
+            const matchesSearch = pool.coverageType.toLowerCase().includes(search.toLowerCase());
+            const matchesStatus = filterStatus === 'all' || pool.status === filterStatus;
+            return matchesSearch && matchesStatus;
+        })
+        .sort((a, b) => {
+            switch (sortBy) {
+                case 'newest':
+                    return b.createdAt - a.createdAt;
+                case 'oldest':
+                    return a.createdAt - b.createdAt;
+                case 'funds':
+                    return b.totalFunds - a.totalFunds;
+                case 'contributors':
+                    return b.contributorCount - a.contributorCount;
+                default:
+                    return 0;
+            }
+        });
 
     if (loading) {
         return (
@@ -34,7 +50,7 @@ export default function PoolsList() {
         <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
                 <h1 className="text-4xl font-bold text-black">Insurance Pools</h1>
-                <div className="flex gap-4 w-full md:w-auto">
+                <div className="flex gap-4 w-full md:w-auto flex-wrap">
                     <input
                         type="text"
                         placeholder="Search pools..."
@@ -50,6 +66,16 @@ export default function PoolsList() {
                         <option value="all">All Status</option>
                         <option value={POOL_STATUS.ACTIVE}>Active</option>
                         <option value={POOL_STATUS.CLOSED}>Closed</option>
+                    </select>
+                    <select
+                        className="px-4 py-2 border border-gray-200 rounded focus:border-stacks-orange outline-none"
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as any)}
+                    >
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="funds">Highest Funds</option>
+                        <option value="contributors">Most Contributors</option>
                     </select>
                 </div>
             </div>
