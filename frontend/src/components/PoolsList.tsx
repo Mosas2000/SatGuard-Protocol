@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePools } from '../hooks/usePools';
 import PoolCard from './PoolCard';
 import { POOL_STATUS } from '../utils/constants';
+import { exportPoolsToCSV, exportPoolsToJSON } from '../utils/exportUtils';
 
 export default function PoolsList() {
     const { pools, loading, error } = usePools();
@@ -75,7 +76,25 @@ export default function PoolsList() {
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-                <h1 className="text-4xl font-bold text-black">Insurance Pools</h1>
+                <div className="flex items-center gap-4">
+                    <h1 className="text-4xl font-bold text-black">Insurance Pools</h1>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => exportPoolsToCSV(filteredPools)}
+                            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                            title="Export to CSV"
+                        >
+                            📊 CSV
+                        </button>
+                        <button
+                            onClick={() => exportPoolsToJSON(filteredPools)}
+                            className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded border border-gray-300"
+                            title="Export to JSON"
+                        >
+                            📄 JSON
+                        </button>
+                    </div>
+                </div>
                 <div className="flex gap-4 w-full md:w-auto flex-wrap">
                     <input
                         type="text"
