@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { callReadOnlyFunction, cvToJSON, uintCV, principalCV } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToJSON, uintCV, principalCV } from '@stacks/transactions';
 import { network } from '../utils/network';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../utils/constants';
-import { Contribution } from '../types';
+import type { Contribution } from '../types';
 
 export function useContribution(poolId: number, userAddress: string | null) {
     const [contribution, setContribution] = useState<Contribution | null>(null);
@@ -18,7 +18,7 @@ export function useContribution(poolId: number, userAddress: string | null) {
             }
 
             try {
-                const result = await callReadOnlyFunction({
+                const result = await fetchCallReadOnlyFunction({
                     contractAddress: CONTRACT_ADDRESS,
                     contractName: CONTRACT_NAME,
                     functionName: 'get-contrib',

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { callReadOnlyFunction, cvToJSON, uintCV } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToJSON, uintCV } from '@stacks/transactions';
 import { network } from '../utils/network';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../utils/constants';
-import { Pool } from '../types';
+import type { Pool } from '../types';
 
 export function usePool(poolId: number) {
     const [pool, setPool] = useState<Pool | null>(null);
@@ -12,7 +12,7 @@ export function usePool(poolId: number) {
     useEffect(() => {
         async function fetchPool() {
             try {
-                const result = await callReadOnlyFunction({
+                const result = await fetchCallReadOnlyFunction({
                     contractAddress: CONTRACT_ADDRESS,
                     contractName: CONTRACT_NAME,
                     functionName: 'get-pool',
