@@ -48,6 +48,32 @@ export default function PoolsList() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-500 text-sm">Total Pools</p>
+                    <p className="text-2xl font-bold text-black">{pools.length}</p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-500 text-sm">Active Pools</p>
+                    <p className="text-2xl font-bold text-green-600">
+                        {pools.filter(p => p.status === POOL_STATUS.ACTIVE).length}
+                    </p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-500 text-sm">Total Funds</p>
+                    <p className="text-2xl font-bold text-stacks-orange">
+                        {(pools.reduce((sum, p) => sum + p.totalFunds, 0) / 1000000).toFixed(2)} STX
+                    </p>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <p className="text-gray-500 text-sm">Total Contributors</p>
+                    <p className="text-2xl font-bold text-purple-600">
+                        {pools.reduce((sum, p) => sum + p.contributorCount, 0)}
+                    </p>
+                </div>
+            </div>
+
             <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
                 <h1 className="text-4xl font-bold text-black">Insurance Pools</h1>
                 <div className="flex gap-4 w-full md:w-auto flex-wrap">
