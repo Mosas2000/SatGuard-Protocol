@@ -139,11 +139,16 @@ export default function PoolsList() {
             </div>
 
             {filteredPools.length > 0 ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredPools.map((pool) => (
-                        <PoolCard key={pool.poolId} pool={pool} />
-                    ))}
-                </div>
+                <>
+                    <div className="mb-4 text-sm text-gray-600">
+                        Showing {filteredPools.length} of {pools.length} pools
+                    </div>
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredPools.map((pool) => (
+                            <PoolCard key={pool.poolId} pool={pool} />
+                        ))}
+                    </div>
+                </>
             ) : (
                 <div className="text-center py-20 border border-dashed border-gray-300 rounded">
                     <p className="text-gray-500">No pools found matching your criteria.</p>
