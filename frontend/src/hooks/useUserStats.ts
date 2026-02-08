@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePools } from './usePools';
-import { callReadOnlyFunction, cvToJSON, uintCV, principalCV } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToJSON, uintCV, principalCV } from '@stacks/transactions';
 import { network } from '../utils/network';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../utils/constants';
 
@@ -36,7 +36,7 @@ export function useUserStats(userAddress: string | null) {
 
                 // 1. Fetch contributions across all pools
                 const contribPromises = pools.map(pool =>
-                    callReadOnlyFunction({
+                    fetchCallReadOnlyFunction({
                         contractAddress: CONTRACT_ADDRESS,
                         contractName: CONTRACT_NAME,
                         functionName: 'get-contrib',
@@ -70,7 +70,7 @@ export function useUserStats(userAddress: string | null) {
                 });
 
                 // 2. Fetch claims to count user's submissions
-                const countResult = await callReadOnlyFunction({
+                const countResult = await fetchCallReadOnlyFunction({
                     contractAddress: CONTRACT_ADDRESS,
                     contractName: CONTRACT_NAME,
                     functionName: 'get-claim-count',
@@ -83,7 +83,7 @@ export function useUserStats(userAddress: string | null) {
                 const claimPromises = [];
                 for (let i = 1; i <= claimCount; i++) {
                     claimPromises.push(
-                        callReadOnlyFunction({
+                        fetchCallReadOnlyFunction({
                             contractAddress: CONTRACT_ADDRESS,
                             contractName: CONTRACT_NAME,
                             functionName: 'get-claim',
