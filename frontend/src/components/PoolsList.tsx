@@ -8,8 +8,13 @@ export default function PoolsList() {
     const { pools, loading, error } = usePools();
     const [search, setSearch] = useState('');
     const [filterStatus, setFilterStatus] = useState<number | 'all'>('all');
-    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'funds' | 'contributors'>('newest');
+    const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'funds' | 'contributors'>('newest');    const [isRefreshing, setIsRefreshing] = useState(false);
 
+    const handleRefresh = async () => {
+        setIsRefreshing(true);
+        await refetch();
+        setTimeout(() => setIsRefreshing(false), 500);
+    };
     const filteredPools = pools
         .filter((pool) => {
             const matchesSearch = pool.coverageType.toLowerCase().includes(search.toLowerCase());
@@ -78,6 +83,14 @@ export default function PoolsList() {
             <div className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
                 <div className="flex items-center gap-4">
                     <h1 className="text-4xl font-bold text-black">Insurance Pools</h1>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                        title="Refresh pools"
+                    >
+                        <span className={isRefreshing ? 'inline-block animate-spin' : ''}>🔄</span>
+                    </button>
                     <div className="flex gap-2">
                         <button
                             onClick={() => exportPoolsToCSV(filteredPools)}
