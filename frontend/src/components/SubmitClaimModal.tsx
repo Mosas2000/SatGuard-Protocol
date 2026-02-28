@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { openContractCall } from '@stacks/connect';
-import { uintCV, utf8CV, PostConditionMode } from '@stacks/transactions';
+import { uintCV, stringUtf8CV, PostConditionMode } from '@stacks/transactions';
 import { network } from '../utils/network';
 import { CONTRACT_ADDRESS, CONTRACT_NAME, MICRO_STACKS } from '../utils/constants';
 
@@ -39,7 +39,7 @@ export default function SubmitClaimModal({
                 functionArgs: [
                     uintCV(poolId),
                     uintCV(parseFloat(amount) * MICRO_STACKS),
-                    utf8CV(reason),
+                    stringUtf8CV(reason),
                 ],
                 network,
                 postConditionMode: PostConditionMode.Deny,

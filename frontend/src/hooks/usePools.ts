@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { callReadOnlyFunction, cvToJSON, uintCV } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToJSON, uintCV } from '@stacks/transactions';
 import { network } from '../utils/network';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../utils/constants';
-import { Pool } from '../types';
+import type { Pool } from '../types';
 
 export function usePools() {
     const [pools, setPools] = useState<Pool[]>([]);
@@ -12,7 +12,7 @@ export function usePools() {
     useEffect(() => {
         async function fetchPools() {
             try {
-                const countResult = await callReadOnlyFunction({
+                const countResult = await fetchCallReadOnlyFunction({
                     contractAddress: CONTRACT_ADDRESS,
                     contractName: CONTRACT_NAME,
                     functionName: 'get-pool-count',
@@ -28,7 +28,7 @@ export function usePools() {
                 // We saw Pool 1 exist earlier.
                 for (let i = 1; i <= poolCount; i++) {
                     poolPromises.push(
-                        callReadOnlyFunction({
+                        fetchCallReadOnlyFunction({
                             contractAddress: CONTRACT_ADDRESS,
                             contractName: CONTRACT_NAME,
                             functionName: 'get-pool',

@@ -1,4 +1,4 @@
-import { Claim } from '../types';
+import type { Claim } from '../types';
 import { formatAmount, CLAIM_STATUS } from '../utils/constants';
 import { getAddressUrl } from '../utils/network';
 

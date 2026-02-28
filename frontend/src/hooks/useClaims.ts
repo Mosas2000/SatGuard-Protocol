@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { callReadOnlyFunction, cvToJSON, uintCV } from '@stacks/transactions';
+import { fetchCallReadOnlyFunction, cvToJSON, uintCV } from '@stacks/transactions';
 import { network } from '../utils/network';
 import { CONTRACT_ADDRESS, CONTRACT_NAME } from '../utils/constants';
-import { Claim } from '../types';
+import type { Claim } from '../types';
 
 export function useClaims(poolId: number) {
     const [claims, setClaims] = useState<Claim[]>([]);
@@ -12,7 +12,7 @@ export function useClaims(poolId: number) {
     useEffect(() => {
         async function fetchClaims() {
             try {
-                const countResult = await callReadOnlyFunction({
+                const countResult = await fetchCallReadOnlyFunction({
                     contractAddress: CONTRACT_ADDRESS,
                     contractName: CONTRACT_NAME,
                     functionName: 'get-claim-count',
@@ -26,7 +26,7 @@ export function useClaims(poolId: number) {
 
                 for (let i = 1; i <= claimCount; i++) {
                     claimPromises.push(
-                        callReadOnlyFunction({
+                        fetchCallReadOnlyFunction({
                             contractAddress: CONTRACT_ADDRESS,
                             contractName: CONTRACT_NAME,
                             functionName: 'get-claim',
