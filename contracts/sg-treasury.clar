@@ -1,0 +1,10 @@
+;; SatGuard Treasury Management
+(define-constant admin tx-sender)
+(define-data-var treasury-bal uint u0)
+(define-data-var reserve-pct uint u10)
+(define-read-only (get-balance) (var-get treasury-bal))
+(define-read-only (get-reserve-pct) (var-get reserve-pct))
+(define-public (deposit (amt uint))
+  (begin (var-set treasury-bal (+ (var-get treasury-bal) amt)) (ok true)))
+(define-public (set-reserve (p uint))
+  (begin (asserts! (is-eq tx-sender admin) (err u401)) (var-set reserve-pct p) (ok true)))

@@ -1,0 +1,10 @@
+;; SatGuard Leaderboard
+(define-map scores principal uint)
+(define-map rank-names uint (string-utf8 16))
+(define-read-only (get-score (user principal)) (default-to u0 (map-get? scores user)))
+(define-read-only (get-rank-name (rank uint)) (map-get? rank-names rank))
+(define-read-only (get-rank (user principal))
+  (let ((s (get-score user)))
+    (if (>= s u1000) u3 (if (>= s u500) u2 (if (>= s u100) u1 u0)))))
+(define-public (update-score (delta uint))
+  (ok (map-set scores tx-sender (+ (get-score tx-sender) delta))))

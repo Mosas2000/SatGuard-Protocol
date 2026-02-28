@@ -1,0 +1,13 @@
+;; SatGuard Protocol Configuration
+(define-constant admin tx-sender)
+(define-data-var protocol-fee uint u50)
+(define-data-var min-pool-size uint u1000000)
+(define-data-var max-claim-pct uint u80)
+(define-data-var paused bool false)
+(define-read-only (get-fee) (var-get protocol-fee))
+(define-read-only (get-min-pool) (var-get min-pool-size))
+(define-read-only (get-max-claim-pct) (var-get max-claim-pct))
+(define-read-only (is-paused) (var-get paused))
+(define-public (set-fee (f uint)) (begin (asserts! (is-eq tx-sender admin) (err u401)) (var-set protocol-fee f) (ok true)))
+(define-public (set-min-pool (m uint)) (begin (asserts! (is-eq tx-sender admin) (err u401)) (var-set min-pool-size m) (ok true)))
+(define-public (toggle-pause) (begin (asserts! (is-eq tx-sender admin) (err u401)) (var-set paused (not (var-get paused))) (ok true)))

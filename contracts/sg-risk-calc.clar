@@ -1,0 +1,11 @@
+;; SatGuard Risk Calculator
+(define-constant PRECISION u10000)
+(define-map asset-risk (string-utf8 16) uint)
+(define-read-only (get-asset-risk (asset (string-utf8 16))) (default-to u50 (map-get? asset-risk asset)))
+(define-read-only (calc-risk-score (base uint) (asset (string-utf8 16)) (duration uint))
+  (let ((ar (get-asset-risk asset))
+        (time-factor (if (> duration u52560) u150 (if (> duration u26280) u120 u100))))
+    (/ (* (* base ar) time-factor) (* u100 u100))))
+(define-public (set-asset-risk (asset (string-utf8 16)) (risk uint))
+  (begin (asserts! (<= risk u100) (err u400))
+    (map-set asset-risk asset risk) (ok true)))

@@ -1,0 +1,11 @@
+;; SatGuard Premium Calculator
+(define-constant PRECISION u10000)
+(define-map risk-multipliers uint uint)
+(define-read-only (get-multiplier (tier uint)) (default-to u100 (map-get? risk-multipliers tier)))
+(define-read-only (calc-premium (coverage uint) (tier uint) (months uint))
+  (let ((base (/ (* coverage u250) PRECISION))
+        (adjusted (/ (* base (get-multiplier tier)) u100)))
+    (* adjusted months)))
+(define-public (set-multiplier (tier uint) (mult uint))
+  (begin (asserts! (is-eq tx-sender tx-sender) (err u401))
+    (map-set risk-multipliers tier mult) (ok true)))

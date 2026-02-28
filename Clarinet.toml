@@ -10,3 +10,158 @@ requirements = []
 path = "contracts/insurance-pool.clar"
 clarity_version = 2
 epoch = 2.5
+
+[contracts.sg-config]
+path = "contracts/sg-config.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-reputation]
+path = "contracts/sg-reputation.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-risk-tiers]
+path = "contracts/sg-risk-tiers.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-price-feed]
+path = "contracts/sg-price-feed.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-treasury]
+path = "contracts/sg-treasury.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-staking-core]
+path = "contracts/sg-staking-core.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-gov-proposals]
+path = "contracts/sg-gov-proposals.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-gov-voting]
+path = "contracts/sg-gov-voting.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-coverage-types]
+path = "contracts/sg-coverage-types.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-referral]
+path = "contracts/sg-referral.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-emergency]
+path = "contracts/sg-emergency.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-kyc-registry]
+path = "contracts/sg-kyc-registry.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-blacklist]
+path = "contracts/sg-blacklist.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-badges]
+path = "contracts/sg-badges.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-loyalty]
+path = "contracts/sg-loyalty.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-leaderboard]
+path = "contracts/sg-leaderboard.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-fee-engine]
+path = "contracts/sg-fee-engine.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-premium-calc]
+path = "contracts/sg-premium-calc.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-policy-registry]
+path = "contracts/sg-policy-registry.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-reserve-fund]
+path = "contracts/sg-reserve-fund.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-rewards-pool]
+path = "contracts/sg-rewards-pool.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-oracle-registry]
+path = "contracts/sg-oracle-registry.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-coverage-limits]
+path = "contracts/sg-coverage-limits.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-risk-calc]
+path = "contracts/sg-risk-calc.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-timelock]
+path = "contracts/sg-timelock.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-quorum]
+path = "contracts/sg-quorum.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-user-stats]
+path = "contracts/sg-user-stats.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-pool-boost]
+path = "contracts/sg-pool-boost.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-multisig]
+path = "contracts/sg-multisig.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-event-log]
+path = "contracts/sg-event-log.clar"
+clarity_version = 2
+epoch = 2.5
+
+[contracts.sg-staking-rewards]
+path = "contracts/sg-staking-rewards.clar"
+clarity_version = 2
+epoch = 2.5

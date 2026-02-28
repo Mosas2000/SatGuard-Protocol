@@ -1,0 +1,12 @@
+;; SatGuard Price Feed Oracle
+(define-constant oracle tx-sender)
+(define-data-var btc-price uint u0)
+(define-data-var stx-price uint u0)
+(define-data-var last-update uint u0)
+(define-read-only (get-btc-price) (var-get btc-price))
+(define-read-only (get-stx-price) (var-get stx-price))
+(define-read-only (get-last-update) (var-get last-update))
+(define-public (set-prices (btc uint) (stx uint))
+  (begin (asserts! (is-eq tx-sender oracle) (err u401))
+    (var-set btc-price btc) (var-set stx-price stx)
+    (var-set last-update block-height) (ok true)))

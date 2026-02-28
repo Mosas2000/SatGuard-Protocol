@@ -1,0 +1,12 @@
+;; SatGuard Emergency Controls
+(define-constant admin tx-sender)
+(define-data-var emergency bool false)
+(define-data-var freeze-height uint u0)
+(define-read-only (is-emergency) (var-get emergency))
+(define-read-only (get-freeze-height) (var-get freeze-height))
+(define-public (trigger-emergency)
+  (begin (asserts! (is-eq tx-sender admin) (err u401))
+    (var-set emergency true) (var-set freeze-height block-height) (ok true)))
+(define-public (resolve-emergency)
+  (begin (asserts! (is-eq tx-sender admin) (err u401))
+    (var-set emergency false) (ok true)))

@@ -1,0 +1,12 @@
+;; SatGuard KYC Registry
+(define-constant admin tx-sender)
+(define-map kyc-status principal bool)
+(define-map kyc-level principal uint)
+(define-read-only (is-verified (user principal)) (default-to false (map-get? kyc-status user)))
+(define-read-only (get-level (user principal)) (default-to u0 (map-get? kyc-level user)))
+(define-public (verify-user (user principal) (level uint))
+  (begin (asserts! (is-eq tx-sender admin) (err u401))
+    (map-set kyc-status user true) (map-set kyc-level user level) (ok true)))
+(define-public (revoke-user (user principal))
+  (begin (asserts! (is-eq tx-sender admin) (err u401))
+    (map-set kyc-status user false) (ok true)))

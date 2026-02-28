@@ -1,0 +1,10 @@
+;; SatGuard Staking Core
+(define-map stakes {u: principal} {a: uint, s: uint})
+(define-data-var total-staked uint u0)
+(define-read-only (get-stake (u principal)) (default-to {a: u0, s: u0} (map-get? stakes {u: u})))
+(define-read-only (get-total) (var-get total-staked))
+(define-public (stake (amt uint))
+  (begin (asserts! (> amt u0) (err u100))
+    (let ((cur (get-stake tx-sender)))
+      (map-set stakes {u: tx-sender} {a: (+ (get a cur) amt), s: block-height})
+      (var-set total-staked (+ (var-get total-staked) amt)) (ok true))))

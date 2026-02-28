@@ -1,0 +1,12 @@
+;; SatGuard Blacklist
+(define-constant admin tx-sender)
+(define-map blacklisted principal bool)
+(define-map blacklist-reason principal (string-utf8 64))
+(define-read-only (is-blacklisted (user principal)) (default-to false (map-get? blacklisted user)))
+(define-read-only (get-reason (user principal)) (map-get? blacklist-reason user))
+(define-public (add-to-blacklist (user principal) (reason (string-utf8 64)))
+  (begin (asserts! (is-eq tx-sender admin) (err u401))
+    (map-set blacklisted user true) (map-set blacklist-reason user reason) (ok true)))
+(define-public (remove-from-blacklist (user principal))
+  (begin (asserts! (is-eq tx-sender admin) (err u401))
+    (map-set blacklisted user false) (ok true)))
